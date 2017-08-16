@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<body onload="Connect()">
+<h1>Conical Dark Field Imaging</h1>
+<p> Enter desired axial tilt angle in deg or mrad:</p>
+mrad: <input type="text" name="mrad-tilt" id="mrad-tilt" onblur="mradEntered()">
+deg: <input type="text" name="deg-tilt" id="deg-tilt" onblur="degEntered()"><br>
+
+<p><button type="button" id="test-tilt-btn" onclick="SetTiltAngleBtn()">Test Axial Tilt</button></p>
+<p> Enter time and rotation steps:</p>
+Time step (ms): <input type="text" name="time-step" id="time-step"><br>
+Rotation step (mrad): <input type="text" name="rot-step-mrad" id="rot-step-mrad">
+<!--deg: <input type="text" name="rot-step-deg" id="rot-step-deg">--><br>
+<p><button type="button" id="toggle-rot-btn" onclick="RotateBeamBtn()">Begin Rotation</button></p>
+</p>
+<p id="Message"></p>
+
+<script type="text/javascript">
+var Tecnai;
+var ProjSystem;
+var GunSystem;
+var IllumSystem;
+var initDFMode;
+var tilted = false;
+var timerID = null;
+
+// configure maxTiltDeg based on the microscope maximum.  Allow maxTiltMRad to calculate.
+var maxTiltDeg = 7.7;
+var maxTiltMRad = maxTiltDeg / 180 * Math.PI * 1000;
+
+// Create the microscope objects and any other initialization needed
+function Connect() 
+{
+	Tecnai= new ActiveXObject("tecnai.Instrument");
+	ProjSystem = Tecnai.Projection;
+	GunSystem = Tecnai.Gun;
+	IllumSystem = Tecnai.Illumination;
+}
+
+function DisplayTiltAngles()
+{
+	var BTilt = IllumSystem.Tilt;
+	document.getElementById("Message").innerHTML="DF Tilt angles:<br> X (mrad) = " + BTilt.x*1000 + "<BR>Y (rad) = " + BTilt.y;
+}
+
+// utility function to test for numeric values in the HTML input boxes
+function IsNumeric(val) {
+	return Number(parseFloat(val))==val;
+}
+
+function mradEntered()
+{
+	var mrads = document.getElementById("mrad-tilt").value;
+	var degs;
+	if(IsNumeric(mrads)) {
+		if(mrads > maxTiltMRad) mrads = maxTiltMRad;
+		mrads = mrads % (2000*Math.PI);
+		degs = parseFloat(mrads) / 1000 * 180 / Math.PI;
+	}
+	else {
+		degs = "INVALID";
+	}
+	
+	document.getElementById("deg-tilt").value = degs;
+	document.getElementById("mrad-tilt").value = mrads;
+}
+
+function degEntered()
+{
+	var degs = document.getElementById("deg-tilt").value;
+	var mrads;
+	if(IsNumeric(degs))	{
+		if(degs > maxTiltDeg) degs = maxTiltDeg;
+		degs = degs % 360;
+		mrads = (parseFloat(degs) / 180 * Math.PI * 1000);
+	}
+	else {
+		mrads = "INVALID";
+	}
+	
+	document.getElementById("mrad-tilt").value = mrads;
+	document.getElementById("deg-tilt").value = degs;
+}
+
+
+function SetTiltAngle(mRadAngle)
+{
+	var BTilt = IllumSystem.Tilt;
+	BTilt.x = mRadAngle/1000;
+	IllumSystem.Tilt = BTilt;
+	DisplayTiltAngles();
+}
+
+function RotateBeam(mRadAngleInc)
+{
+	var BTilt = IllumSystem.Tilt;
+	BTilt.y += mRadAngleInc/1000;
+	IllumSystem.Tilt = BTilt;
+	DisplayTiltAngles();
+}
+
+function RotateBeamTimer(mRadAngleInc, timeInc)
+{
+	if(timerID == null) {
+		var rotAngle = mRadAngleInc
+		timerID = setInterval(function() { RotateBeam(mRadAngleInc) }, timeInc);
+		document.getElementById("toggle-rot-btn").innerHTML="Stop Rotation";
+	}
+	else {
+		clearInterval(timerID);
+		timerID = null;
+		document.getElementById("toggle-rot-btn").innerHTML="Begin Rotation";
+	}
+}
+
+function SetTiltAngleBtn()
+{
+	mradAngle = document.getElementById("mrad-tilt").value;
+	if(!tilted) {
+		if(IsNumeric(mradAngle)) {
+			SetTiltAngle(parseFloat(mradAngle));
+			initDFMode = IllumSystem.DFMode;
+			IllumSystem.DFMode = 3;
+			tilted = true;
+			document.getElementById("test-tilt-btn").innerHTML="Clear Tilt";
+		}
+	}
+	else {
+		SetTiltAngle(0);
+		IllumSystem.DFMode = initDFMode;
+		tilted = false;
+		document.getElementById("test-tilt-btn").innerHTML="Test Axial Tilt";
+	}
+	
+	DisplayTiltAngles();
+}
+
+function RotateBeamBtn()
+{
+	var mrads = document.getElementById("rot-step-mrad").value;
+	var secStep = document.getElementById("time-step").value;
+	if(IsNumeric(mrads) && IsNumeric(secStep)) 
+		RotateBeamTimer(mrads, secStep);
+}
+
+</script>
+
+</body>
+</html>

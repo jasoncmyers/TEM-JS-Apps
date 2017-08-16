@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<body onload="Connect()">
+
+<p>Assign beam blank to L/R buttons</p>
+<p id="HV"></p>
+<select id="buttonChoiceSelect">
+	<option value="L1">L1</option>
+	<option value="L2">L2</option>
+	<option value="L3">L3</option>
+	<option value="R1">R1</option>
+	<option value="R2">R2</option>
+	<option value="R3">R3</option>
+</select></p>
+<button onclick="AssignButton()">Assign to button</button>
+<button onclick="UnassignButton()">Remove assignment</button></p>
+
+<script type="text/javascript">
+
+var e = document.getElementById("buttonChoiceSelect");
+var assignedButton;
+var Tecnai;
+var Illum;
+var L1Button, L2Button, L3Button, R1Button, R2Button, R3Button
+var activeButton;
+
+function Connect()
+{
+	Tecnai= new ActiveXObject("tecnai.Instrument");
+	Illum = Tecnai.Illumination;
+	L1Button = Tecnai.UserButtons("L1");
+	L2Button = Tecnai.UserButtons("L2");
+	L3Button = Tecnai.UserButtons("L3");
+	R1Button = Tecnai.UserButtons("R1");
+	R2Button = Tecnai.UserButtons("R2");
+	R3Button = Tecnai.UserButtons("R3");
+	
+	DefineEventHandlers();
+}
+
+function AssignButton()
+{
+	UnassignButton();
+	var buttonChoice = e.options[e.selectedIndex].value;
+	//alert(buttonChoice);
+	switch (buttonChoice) 
+	{
+		case "L1":
+			//alert("L1 assigned");
+			L1Button.Assignment = BlankerLabel();
+			activeButton = L1Button;
+		break;
+		case "L2":
+			//alert("L2 assigned");
+			L2Button.Assignment = BlankerLabel();
+			activeButton = L2Button;
+		break;
+		case "L3":
+			//alert("L3 assigned");
+			L3Button.Assignment = BlankerLabel();
+			activeButton = L3Button;
+		break;
+		case "R1":
+			//alert("R1 assigned");
+			R1Button.Assignment = BlankerLabel();
+			activeButton = R1Button;
+		break;
+		case "R2":
+			//alert("R2 assigned");
+			R2Button.Assignment = BlankerLabel();
+			activeButton = R2Button;
+		break;
+		case "R3":
+			//alert("R3 assigned");
+			R3Button.Assignment = BlankerLabel();
+			activeButton = R3Button;
+		break;
+	}
+	
+}
+
+function UnassignButton()
+{
+	L1Button.Assignment = "";
+	L2Button.Assignment = "";
+	L3Button.Assignment = "";
+	R1Button.Assignment = "";
+	R2Button.Assignment = "";
+	R3Button.Assignment = "";
+	activeButton = null;
+}
+
+function BlankerLabel()
+{
+	return (Illum.BeamBlanked == true) ? "Unblank Beam" : "Blank Beam";
+}
+
+function BlankBeam()
+{
+	//alert("Beam blank triggered");
+	Illum.BeamBlanked = !Illum.BeamBlanked;
+	activeButton.Assignment = BlankerLabel();;
+}
+
+function DefineEventHandlers()
+{
+	
+	function L1Button::Pressed() 
+	{
+		BlankBeam();
+	}
+	
+	function L2Button::Pressed() 
+	{
+		BlankBeam();
+	}
+	
+	function L3Button::Pressed() 
+	{
+		BlankBeam();
+	}
+	
+	function R1Button::Pressed() 
+	{
+		BlankBeam();
+	}
+	
+	function R2Button::Pressed() 
+	{
+		BlankBeam();
+	}
+	
+	function R3Button::Pressed() 
+	{
+		BlankBeam();
+	}
+}
+
+</script>
+
+</body>
+</html>
