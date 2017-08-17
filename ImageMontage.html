@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<body onload="Connect()">
+<h1>Create a montage of images with stage moves</h1>
+<p>(Note: this page will freeze during a montage acquisition. This is normal)</p>
+<p> Enter desired movement distance and number of moves in each direction:</p>
+distance(um): <input type="text" name="move-dist" id="move-dist"><br>
+x-moves: <input type="text" name="x-moves" id="x-moves">
+y-moves: <input type="text" name="y-moves" id="y-moves"><br>
+
+<p><button type="button" id="collect-images" onclick="BeginMontage()">Collect</button></p>
+<p id="Message"></p>
+
+<script type="text/javascript">
+var Tecnai;
+var Stage;
+var stageStartPosition;
+var fso;
+
+
+// configure maxMoveMicron and stageSettleTimeSeconds based on the microscope stage range and preferences.
+// imageDelaySeconds must be set based on the desired exposure time
+// TODO: make the delay an option from the page, or better yet, find a way to read if the camera from DM
+var maxMoveMicron = 200;
+var stageSettleTimeSeconds = 3;
+var imageDelaySeconds = 5;
+
+
+// Create the microscope objects and any other initialization needed
+function Connect() 
+{
+	Tecnai= new ActiveXObject("tecnai.Instrument");
+	Stage = Tecnai.Stage;
+	fso = new ActiveXObject("Scripting.FileSystemObject");
+}
+
+// utility function to dispay text to the message area
+function DisplayMessage(message) {
+	document.getElementById("Message").innerHTML=message;
+}
+
+// utility function to test for numeric values in the HTML input boxes
+function IsNumeric(val) {
+	return Number(parseFloat(val))==val;
+}
+
+// utility function to cause blocking delay until microscope/camera actions are complete
+function wait(time_ms) {
+  var d = new Date();
+  var d2 = null;
+  do { d2 = new Date(); } while (d2-d < time_ms);
+}
+
+function ShiftStage(deltaX, deltaY) {
+	var stagePos = Stage.Position;
+	
+	if(deltaX > maxMoveMicron) deltaX = maxMoveMicron;
+	if(deltaX < -maxMoveMicron) deltaX = -maxMoveMicron;
+	if(deltaY > maxMoveMicron) deltaY = maxMoveMicron;
+	if(deltaY < -maxMoveMicron) deltaY = -maxMoveMicron;
+	
+	stagePos.X += deltaX/1000000;
+	stagePos.Y += deltaY/1000000;
+	
+	// give the stage movement command and wait for completion/settling
+    Stage.GoTo(stagePos, 3);
+    wait(stageSettleTimeSeconds*1000);
+}
+
+function TakeImage()
+{
+	fso.CreateTextFile("C:\\trigger.txt", true);
+	wait(imageDelaySeconds*1000);
+}
+
+function BeginMontage()
+{
+	var xmoves = document.getElementById("x-moves").value
+	var ymoves = document.getElementById("y-moves").value
+	var dist = document.getElementById("move-dist").value
+	if(IsNumeric(xmoves) && IsNumeric(ymoves) && IsNumeric(dist)) {
+		var originalStagePos = Stage.Position;
+		for(var y = 0; y <= ymoves; y++) {
+			TakeImage();
+			for(var x = 0; x < xmoves; x++) {
+				ShiftStage(dist, 0);
+				TakeImage();
+			}
+			ShiftStage(-dist*xmoves, dist);
+		}	
+		Stage.GoTo(originalStagePos, 3);
+	}
+	else {
+		if(!IsNumeric(xmoves)) document.getElementById("x-moves").value = "INVALID";
+		if(!IsNumeric(ymoves)) document.getElementById("y-moves").value = "INVALID";
+		if(!IsNumeric(dist)) document.getElementById("move-dist").value = "INVALID";
+	}
+}
+
+
+
+</script>
+
+</body>
+</html>
