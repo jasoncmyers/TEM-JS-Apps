@@ -20,6 +20,8 @@ browsers.
  normally have this capability.  Because of the low bandwidth of the beam-shift coil
  drivers, which are not originally intended for scanning, relatively slow cone rotation
  rates are necessary to avoid problems with discontinuities between angles.
+ * `Stage_tilt.html` - a script that allows basic control of stage alpha tilting at a continuous rate.
+ This is designed for collecting diffraction patterns across a range of angle (e.g., microED or cRED).
  * `ImageMontage.html` - takes a wide field-of-view series of images by moving the microscope stage
  a specified amount between exposures.  This is a bit klunky at present: the delays for stage
  movement, stage stabilization, and image collection must be manually set to match the instrument
