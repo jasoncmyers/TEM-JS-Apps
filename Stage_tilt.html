@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<body onload="Connect()">
+
+<p>Drive stage to Alpha angle (&deg;): <input type="text" name="set-tilt" id="set-tilt"><br>
+<button onclick="SetAlphaTilt()">Set Stage</button></p>
+<br><br>
+<p>Continuous tilting (note: currently must go from lower to higher angle!)<br>
+Final Alpha tilt (&deg;): <input type="text" name="final-tilt" id="final-tilt"><br>
+Tilt step (&deg;): <input type="text" name="tilt-step" id="tilt-step" value="0.2"><br>
+<button onclick="StartTilt()">Start Tilting</button><button>Stop (not implemented)</button></p>
+
+
+<br><br>
+<p>Assign "Start Tilt" to L/R buttons</p>
+<select id="buttonChoiceSelect">
+	<option value="L1">L1</option>
+	<option value="L2">L2</option>
+	<option value="L3">L3</option>
+	<option value="R1">R1</option>
+	<option value="R2">R2</option>
+	<option value="R3">R3</option>
+</select><p>
+<button onclick="AssignButton()">Assign to button</button>
+<button onclick="UnassignButton()">Remove assignment</button>
+
+
+<script type="text/javascript">
+
+var e = document.getElementById("buttonChoiceSelect");
+var assignedButton;
+var Tecnai;
+var Illum;
+var L1Button, L2Button, L3Button, R1Button, R2Button, R3Button
+
+function Connect()
+{
+	Tecnai= new ActiveXObject("TEMScripting.Instrument");
+	//Tecnai= new ActiveXObject("Tecnai.Instrument");
+	Illum = Tecnai.Illumination;
+	Stage = Tecnai.Stage;
+	L1Button = Tecnai.UserButtons("L1");
+	L2Button = Tecnai.UserButtons("L2");
+	L3Button = Tecnai.UserButtons("L3");
+	R1Button = Tecnai.UserButtons("R1");
+	R2Button = Tecnai.UserButtons("R2");
+	R3Button = Tecnai.UserButtons("R3");
+	
+	DefineEventHandlers();
+}
+
+function AssignButton()
+{
+	UnassignButton();
+	var buttonChoice = e.options[e.selectedIndex].value;
+	//alert(buttonChoice);
+	switch (buttonChoice) 
+	{
+		case "L1":
+			//alert("L1 assigned");
+			L1Button.Assignment = "Start Tilt";
+		break;
+		case "L2":
+			//alert("L2 assigned");
+			L2Button.Assignment = "Start Tilt";
+		break;
+		case "L3":
+			//alert("L3 assigned");
+			L3Button.Assignment = "Start Tilt";
+		break;
+		case "R1":
+			//alert("R1 assigned");
+			R1Button.Assignment = "Start Tilt";
+		break;
+		case "R2":
+			//alert("R2 assigned");
+			R2Button.Assignment = "Start Tilt";
+		break;
+		case "R3":
+			//alert("R3 assigned");
+			R3Button.Assignment = "Start Tilt";
+		break;
+		assignedButton = buttonChoice;
+	}
+	
+}
+
+function UnassignButton()
+{
+	L1Button.Assignment = "";
+	L2Button.Assignment = "";
+	L3Button.Assignment = "";
+	R1Button.Assignment = "";
+	R2Button.Assignment = "";
+	R3Button.Assignment = "";
+	assignedButton = "";
+}
+
+
+
+function StartTilt()
+{
+	var finalAngle = document.getElementById("final-tilt").value;
+	var tiltStep = document.getElementById("tilt-step").value;
+	if (!IsNumeric(finalAngle)) {
+		alert("Final angle must be numeric");
+		return;
+	}
+	if (!IsNumeric(tiltStep)) {
+		alert("Tilt step must be numeric");
+		return;
+	}
+
+	finalAngle = deg2rad(finalAngle);
+	tiltStep = deg2rad(tiltStep);
+
+	var curAngle = Stage.Position.A;
+	//alert("Stage angle: " + curAngle);
+	var Pos = new Tecnai.StagePosition(0, 0, 0, curAngle, 0);
+	var axisA = 8;
+	for (var ATilt = curAngle; ATilt <= finalAngle; ATilt += tiltStep) {
+		Pos.A = ATilt;
+		Stage.GoTo(Pos, axisA);
+	} 
+}
+
+
+function DriveStage(degVal) {
+	var radVal = deg2rad(degVal);
+	var Pos = new Tecnai.StagePosition(0, 0, 0, radVal, 0);
+	var axisA = 8;
+	Stage.MoveTo(Pos, axisA);
+}
+
+function SetAlphaTilt() {
+	
+	var tiltVal = document.getElementById("set-tilt").value;
+	if (!IsNumeric(tiltVal)) {
+		alert("Must be a numeric value");
+		return;
+	}
+	
+	DriveStage(tiltVal);
+}
+
+
+// This is kind of weird, but the handlers are only called if a string is passed to
+// Button.Assignment for that button.  If the string = "" then these are ignored.
+function DefineEventHandlers()
+{
+	function L1Button::Pressed() 
+	{
+		StartTilt();
+	}
+	
+	function L2Button::Pressed() 
+	{
+		StartTilt();
+	}
+	
+	function L3Button::Pressed() 
+	{
+		StartTilt();
+	}
+	
+	function R1Button::Pressed() 
+	{
+		StartTilt();
+	}
+	
+	function R2Button::Pressed() 
+	{
+		StartTilt();
+	}
+	
+	function R3Button::Pressed() 
+	{
+		StartTilt();
+	}
+}
+
+function IsNumeric(val) {
+	return Number(parseFloat(val)) == val;
+}
+
+function deg2rad(degVal) {
+	return degVal / 180 * Math.PI;
+}
+
+
+</script>
+
+</body>
+</html>
