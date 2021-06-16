@@ -8,7 +8,7 @@
 <p>Continuous tilting (note: currently must go from lower to higher angle!)<br>
 Final Alpha tilt (&deg;): <input type="text" name="final-tilt" id="final-tilt"><br>
 Tilt step (&deg;): <input type="text" name="tilt-step" id="tilt-step" value="0.2"><br>
-<button onclick="StartTilt()">Start Tilting</button><button>Stop (not implemented)</button></p>
+<button onclick="StartTilt()">Start Tilting</button></p>
 
 
 <br><br>
@@ -30,14 +30,16 @@ Tilt step (&deg;): <input type="text" name="tilt-step" id="tilt-step" value="0.2
 var e = document.getElementById("buttonChoiceSelect");
 var assignedButton;
 var Tecnai;
-var Illum;
 var L1Button, L2Button, L3Button, R1Button, R2Button, R3Button
 
 function Connect()
 {
-	Tecnai= new ActiveXObject("TEMScripting.Instrument");
-	//Tecnai= new ActiveXObject("Tecnai.Instrument");
-	Illum = Tecnai.Illumination;
+	try {
+		Tecnai= new ActiveXObject("TEMScripting.Instrument");
+	}
+	catch (err) {
+		Tecnai= new ActiveXObject("Tecnai.Instrument");
+	}
 	Stage = Tecnai.Stage;
 	L1Button = Tecnai.UserButtons("L1");
 	L2Button = Tecnai.UserButtons("L2");
